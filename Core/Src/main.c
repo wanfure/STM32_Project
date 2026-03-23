@@ -118,10 +118,10 @@ int main(void)
   while (1)
   {
     //UART1接收数据
-    //HAL_UART_Receive_IT(&huart3,&RX,sizeof(RX));
-    //Chassis_Task(1,0, ch4_map ,ch1_map);
+    HAL_UART_Receive_IT(&huart3,&RX,sizeof(RX));
+    Chassis_Task(1,0, ch4_map ,ch1_map);
 
-    Chassis_Task(ctrl_enable,ch3_map, ch4_map ,ch1_map);
+    // Chassis_Task(ctrl_enable,ch3_map, ch4_map ,ch1_map);
 
     Encoder_Report();
 
