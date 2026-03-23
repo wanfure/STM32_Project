@@ -115,7 +115,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {////////////ceshi测试我好睡觉
+  {
     if (ch5_map == 1792) ctrl_enable = 1;
 
     Chassis_Task(ctrl_enable,ch3_map, ch4_map ,ch1_map);
