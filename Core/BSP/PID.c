@@ -60,27 +60,4 @@ float PID_Calculate(PID_Controller *pid, float target, float actual) {
     return pid->output;  // 返回计算得到的输出
 }
 
-/**
- * @brief 设置目标值
- * @param pid: PID控制器指针
- * @param target: 目标值
- */
-void PID_SetTarget(PID_Controller *pid, float target) {
-    pid->target = target;  // 更新目标值
-}
-
-/**
- * @brief 重置PID控制器
- * @param pid: PID控制器指针
- */
-void PID_Reset(PID_Controller *pid) {
-    pid->target       = 0.0f;  // 重置目标值
-    pid->actual       = 0.0f;  // 重置实际值
-    pid->error        = 0.0f;  // 重置误差
-    pid->last_error   = 0.0f;  // 重置上次误差
-    pid->integral     = 0.0f;  // 重置积分
-    pid->output       = 0.0f;  // 重置输出
-}
-
-
 

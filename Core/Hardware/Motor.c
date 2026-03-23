@@ -1,94 +1,50 @@
 #include "stm32f4xx_hal.h"
 #include "Motor.h"
 #include "tim.h"
+/**
+ * @brief 电机控制函数：设置指定轮子的方向和PWM占空比
+ * @param idx: 轮子索引（0=左上,1=右上,2=左下,3=右下）
+ * @param dir: 方向（1=正转，-1=反转，0=停止）
+ * @param pwm: PWM占空比（0~75）
+ * @note 需先初始化定时器PWM输出和方向引脚为输出模式
+ */
+void Motor_Control(uint8_t idx, int8_t dir, uint8_t pwm) {
+  // 1. PWM限幅（双重保险，防止超量程）
+  if (pwm > PWM_MAX) pwm = PWM_MAX;
+  if (pwm < 0) pwm = 0;
 
-void Motor_Init(void)
-{
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+  // 2. 停止电机：方向置0，PWM置0
+  if (dir == 0) {
+    pwm = 0;
+  }
 
-  Mecanum_Wheel_Control(1, 0, 1);
-  Mecanum_Wheel_Control(2, 0, 1);
-  Mecanum_Wheel_Control(3, 0, 1);
-  Mecanum_Wheel_Control(4, 0, 1);
-
-}
-
-// wheel: 1=左上 2=右上 3=左下 4=右下
-// duty_cycle: 0-100（占空比，速度）
-// dir: 1=正转 0=反转（麦轮需独立控方向）
-void Mecanum_Wheel_Control(uint8_t wheel, uint8_t duty_cycle, uint8_t dir)
-{
-  switch(wheel)
-  {
-    case 1: // 左上轮：A0(PWM)、C0(正)、C15(反)
-      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, duty_cycle);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, dir ? GPIO_PIN_SET : GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, dir ? GPIO_PIN_RESET : GPIO_PIN_SET);
+  // 3. 按轮子索引设置方向
+  switch (idx) {
+    case 0: // 左上轮
+      if (dir == 1) HAL_GPIO_WritePin(MOTOR1_DIR_PORT, MOTOR1_DIR_PIN, GPIO_PIN_SET);
+      else if (dir == -1) HAL_GPIO_WritePin(MOTOR1_DIR_PORT, MOTOR1_DIR_PIN, GPIO_PIN_RESET);
+      __HAL_TIM_SET_COMPARE(MOTOR1_PWM_TIM, MOTOR1_PWM_CH, pwm);
       break;
-
-    case 2: // 右上轮：A1(PWM)、C1(正)、C2(反)
-      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, duty_cycle);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, dir ? GPIO_PIN_SET : GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, dir ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    case 1: // 右上轮
+      if (dir == 1) HAL_GPIO_WritePin(MOTOR2_DIR_PORT, MOTOR2_DIR_PIN, GPIO_PIN_SET);
+      else if (dir == -1) HAL_GPIO_WritePin(MOTOR2_DIR_PORT, MOTOR2_DIR_PIN, GPIO_PIN_RESET);
+      __HAL_TIM_SET_COMPARE(MOTOR2_PWM_TIM, MOTOR2_PWM_CH, pwm);
       break;
-
-    case 3: // 左下轮：A2(PWM)、C13(正)、C14(反)
-      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, duty_cycle);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, dir ? GPIO_PIN_SET : GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, dir ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    case 2: // 左下轮
+      if (dir == 1) HAL_GPIO_WritePin(MOTOR3_DIR_PORT, MOTOR3_DIR_PIN, GPIO_PIN_SET);
+      else if (dir == -1) HAL_GPIO_WritePin(MOTOR3_DIR_PORT, MOTOR3_DIR_PIN, GPIO_PIN_RESET);
+      __HAL_TIM_SET_COMPARE(MOTOR3_PWM_TIM, MOTOR3_PWM_CH, pwm);
       break;
-
-    case 4: // 右下轮：A3(PWM)、C4(正)、C5(反)
-      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, duty_cycle);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, dir ? GPIO_PIN_SET : GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, dir ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    case 3: // 右下轮
+      if (dir == 1) HAL_GPIO_WritePin(MOTOR4_DIR_PORT, MOTOR4_DIR_PIN, GPIO_PIN_SET);
+      else if (dir == -1) HAL_GPIO_WritePin(MOTOR4_DIR_PORT, MOTOR4_DIR_PIN, GPIO_PIN_RESET);
+      __HAL_TIM_SET_COMPARE(MOTOR4_PWM_TIM, MOTOR4_PWM_CH, pwm);
+      break;
+    default: // 无效索引，停止所有电机
+      for (int i=0; i<4; i++) {
+        __HAL_TIM_SET_COMPARE(MOTOR1_PWM_TIM, TIM_CHANNEL_1+i, 0);
+        HAL_GPIO_WritePin(MOTOR1_DIR_PORT, MOTOR1_DIR_PIN+i, GPIO_PIN_RESET);
+      }
       break;
   }
-}
-
-// speed: 0-100（整体速度）
-void Mecanum_Move_Forward(uint8_t speed)  { /* 前进 */
-  Mecanum_Wheel_Control(1, speed, 1);
-  Mecanum_Wheel_Control(2, speed, 0);
-  Mecanum_Wheel_Control(3, speed, 1);
-  Mecanum_Wheel_Control(4, speed, 0);
-}
-void Mecanum_Move_Backward(uint8_t speed) { /* 后退 */
-  Mecanum_Wheel_Control(1, speed, 0);
-  Mecanum_Wheel_Control(2, speed, 1);
-  Mecanum_Wheel_Control(3, speed, 0);
-  Mecanum_Wheel_Control(4, speed, 1);
-}
-void Mecanum_Move_Left(uint8_t speed)     { /* 左平移 */
-  Mecanum_Wheel_Control(1, speed, 0);
-  Mecanum_Wheel_Control(2, speed, 0);
-  Mecanum_Wheel_Control(3, speed, 1);
-  Mecanum_Wheel_Control(4, speed, 1);
-}
-void Mecanum_Move_Right(uint8_t speed)    { /* 右平移 */
-  Mecanum_Wheel_Control(1, speed, 1);
-  Mecanum_Wheel_Control(2, speed, 1);
-  Mecanum_Wheel_Control(3, speed, 0);
-  Mecanum_Wheel_Control(4, speed, 0);
-}
-void Mecanum_Rotate_Left(uint8_t speed)    { /* 原地左转 */
-  Mecanum_Wheel_Control(1, speed, 0);
-  Mecanum_Wheel_Control(2, speed, 0);
-  Mecanum_Wheel_Control(3, speed, 0);
-  Mecanum_Wheel_Control(4, speed, 0);
-}
-void Mecanum_Rotate_Right(uint8_t speed)    { /* 原地右转 */
-  Mecanum_Wheel_Control(1, speed, 1);
-  Mecanum_Wheel_Control(2, speed, 1);
-  Mecanum_Wheel_Control(3, speed, 1);
-  Mecanum_Wheel_Control(4, speed, 1);
-}
-void Mecanum_Stop(void)                   { /* 停止 */
-  Mecanum_Wheel_Control(1, 0, 1);
-  Mecanum_Wheel_Control(2, 0, 1);
-  Mecanum_Wheel_Control(3, 0, 1);
-  Mecanum_Wheel_Control(4, 0, 1);
 }

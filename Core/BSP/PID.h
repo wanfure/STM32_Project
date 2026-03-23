@@ -38,20 +38,5 @@ void PID_Init(PID_Controller *pid, float Kp, float Ki, float Kd, float max_outpu
  * @return 控制输出
  */
 float PID_Calculate(PID_Controller *pid, float target, float actual);
-/**
- * @brief 设置目标值
- * @param pid: PID控制器指针
- * @param target: 目标值
- */
-void PID_SetTarget(PID_Controller *pid, float target);
-/**
- * @brief 重置PID控制器
- * @param pid: PID控制器指针
- */
-void PID_Reset(PID_Controller *pid);
-
-
-
-
 
 #endif //MAILUN_PID_H

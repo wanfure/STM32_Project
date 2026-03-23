@@ -90,11 +90,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         pulse_cnt = 0;  // 清零，准备下一个100ms
     }
 
-    if (htim->Instance == TIM4) {
-
-        PID_Update();
-    }
-
 }
 
 // 报告编码器数据
