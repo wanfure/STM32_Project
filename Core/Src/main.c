@@ -103,7 +103,6 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_UART4_Init();
-  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   ELRS_Init();
 
@@ -116,6 +115,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+    //TIM4已经关闭
+
     if (ch5_map == 1792) ctrl_enable = 1;
 
     Chassis_Task(ctrl_enable,ch3_map, ch4_map ,ch1_map);
